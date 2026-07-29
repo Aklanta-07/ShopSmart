@@ -29,8 +29,8 @@ public class AuthServiceImpl implements AuthService {
 			throw new EmailAlreadyExistsException("Email already exists " + request.getEmail());
 		}
 		
-		User user = User.builder()
-				.name(request.getName())
+		User user = User.builder() 
+				.name(request.getName()) 
 				.email(request.getEmail())
 				.password(passwordEncoder.encode(request.getPassword()))
 				.role(request.getRole())
