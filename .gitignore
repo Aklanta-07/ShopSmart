@@ -39,3 +39,18 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignore Postman folder anywhere in the repository
+**/postman/
+
+# Or, if it's strictly in the root directory
+/postman/
+
+# Ignore Postman environment files (which often contain secrets/API keys)
+*.postman_environment.json
+
+# Ignore Postman collection exports (optional)
+*.postman_collection.json
+
+# Ignore Postman Local Data
+.postman/
