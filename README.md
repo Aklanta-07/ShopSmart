@@ -110,8 +110,8 @@ server.servlet.context-path=/shopsmart
 
 # Oracle Database
 spring.datasource.url=jdbc:oracle:thin:@localhost:1521:ORCL
-spring.datasource.username=c##shopsmart_db
-spring.datasource.password=shopsmart
+spring.datasource.username=*******
+spring.datasource.password=******
 spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
 
 # JPA / Hibernate
