@@ -31,4 +31,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> searchProducts(@Param("search") String search, Pageable pageable);
 
     List<Product> findByInventoryQuantityAvailableLessThanEqual(int threshold);
+
+    long countByIsActiveTrue();
 }
