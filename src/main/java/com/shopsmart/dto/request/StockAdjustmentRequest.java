@@ -8,6 +8,9 @@ import lombok.Data;
 @Data
 public class StockAdjustmentRequest {
 
+    @NotNull(message = "Product ID is required")
+    private Long productId;
+
     @NotNull(message = "Adjustment type is required")
     private AdjustmentType type;
 
