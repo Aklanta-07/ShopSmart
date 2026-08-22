@@ -63,6 +63,31 @@ public class GlobalExceptioHandler {
 		return buildError(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), request.getRequestURI());
 	}
 
+	@ExceptionHandler(CustomerNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleCustomerNotFound(CustomerNotFoundException ex, HttpServletRequest request) {
+		return buildError(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), request.getRequestURI());
+	}
+
+	@ExceptionHandler(CustomerGroupNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleCustomerGroupNotFound(CustomerGroupNotFoundException ex, HttpServletRequest request) {
+		return buildError(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), request.getRequestURI());
+	}
+
+	@ExceptionHandler(DuplicatePhoneException.class)
+	public ResponseEntity<ErrorResponse> handleDuplicatePhone(DuplicatePhoneException ex, HttpServletRequest request) {
+		return buildError(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request.getRequestURI());
+	}
+
+	@ExceptionHandler(DuplicateEmailException.class)
+	public ResponseEntity<ErrorResponse> handleDuplicateEmail(DuplicateEmailException ex, HttpServletRequest request) {
+		return buildError(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request.getRequestURI());
+	}
+
+	@ExceptionHandler(DuplicateCustomerGroupNameException.class)
+	public ResponseEntity<ErrorResponse> handleDuplicateCustomerGroupName(DuplicateCustomerGroupNameException ex, HttpServletRequest request) {
+		return buildError(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request.getRequestURI());
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponse> MethodArgumentNotValidException(MethodArgumentNotValidException ex,
 			HttpServletRequest request) {
