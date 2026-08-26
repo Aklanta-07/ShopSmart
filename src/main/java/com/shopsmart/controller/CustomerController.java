@@ -32,9 +32,12 @@ public class CustomerController {
     @Operation(summary = "Create a new customer")
     @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
     public ResponseEntity<CustomerResponse> create(@Valid @RequestBody CustomerRequest request) {
-        return ResponseEntity.ok(customerService.create(request));
+        CustomerResponse created = customerService.create(request);
+        return ResponseEntity.created(
+                java.net.URI.create("/api/customers/" + created.getId()))
+                .body(created);
     }
-
+    
     @GetMapping("/{id}")
     @Operation(summary = "Get customer by ID")
     @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
