@@ -34,6 +34,8 @@ public interface CustomerService {
 
     void delete(Long id);
 
+    CustomerResponse reactivate(Long id);
+
     List<CustomerResponse> getCustomersWithLowCredit();
 
     Long getTotalActiveCustomers();

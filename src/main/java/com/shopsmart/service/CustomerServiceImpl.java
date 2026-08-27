@@ -124,6 +124,10 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new CustomerNotFoundException(id));
 
+        if (!customer.getIsActive()) {
+            throw new IllegalStateException("Cannot update deactivated customer. Reactivate first.");
+        }
+
         if (!customer.getPhone().equals(request.getPhone()) && customerRepository.existsByPhone(request.getPhone())) {
             throw new DuplicatePhoneException(request.getPhone());
         }
@@ -144,7 +148,7 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setGroup(group);
         customer.setCreditLimit(request.getCreditLimit());
         customer.setGstNumber(request.getGstNumber());
-        customer.setIsActive(request.getIsActive());
+        // isActive is intentionally NOT updated here - use reactivate endpoint
 
         if (request.getAddresses() != null) {
             customer.getAddresses().clear();
@@ -191,6 +195,17 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new CustomerNotFoundException(id));
         customer.setIsActive(false);
         customerRepository.save(customer);
+    }
+
+    @Override
+    public CustomerResponse reactivate(Long id) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new CustomerNotFoundException(id));
+        if (customer.getIsActive()) {
+            throw new IllegalStateException("Customer is already active");
+        }
+        customer.setIsActive(true);
+        return toResponse(customerRepository.save(customer));
     }
 
     @Override

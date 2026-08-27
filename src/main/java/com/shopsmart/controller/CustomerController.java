@@ -126,6 +126,13 @@ public class CustomerController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/reactivate")
+    @Operation(summary = "Reactivate a deactivated customer")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CustomerResponse> reactivate(@PathVariable Long id) {
+        return ResponseEntity.ok(customerService.reactivate(id));
+    }
+
     @GetMapping("/low-credit")
     @Operation(summary = "Get customers with low available credit")
     @PreAuthorize("hasRole('ADMIN')")
