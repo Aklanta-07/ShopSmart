@@ -59,7 +59,8 @@ public class Order {
     @Builder.Default
     private BigDecimal balanceDue = BigDecimal.ZERO;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "notes")
     private String notes;
 
     @Column(name = "completed_at")
