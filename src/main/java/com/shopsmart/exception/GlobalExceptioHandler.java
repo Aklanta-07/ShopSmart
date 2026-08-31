@@ -88,6 +88,26 @@ public class GlobalExceptioHandler {
 		return buildError(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request.getRequestURI());
 	}
 
+	@ExceptionHandler(OrderNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleOrderNotFound(OrderNotFoundException ex, HttpServletRequest request) {
+		return buildError(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), request.getRequestURI());
+	}
+
+	@ExceptionHandler(OrderCannotBeModifiedException.class)
+	public ResponseEntity<ErrorResponse> handleOrderCannotBeModified(OrderCannotBeModifiedException ex, HttpServletRequest request) {
+		return buildError(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request.getRequestURI());
+	}
+
+	@ExceptionHandler(OrderCannotBeCancelledException.class)
+	public ResponseEntity<ErrorResponse> handleOrderCannotBeCancelled(OrderCannotBeCancelledException ex, HttpServletRequest request) {
+		return buildError(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request.getRequestURI());
+	}
+
+	@ExceptionHandler(InvalidOrderStatusException.class)
+	public ResponseEntity<ErrorResponse> handleInvalidOrderStatus(InvalidOrderStatusException ex, HttpServletRequest request) {
+		return buildError(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), request.getRequestURI());
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponse> MethodArgumentNotValidException(MethodArgumentNotValidException ex,
 			HttpServletRequest request) {
