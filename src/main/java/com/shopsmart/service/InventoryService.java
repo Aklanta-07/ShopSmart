@@ -12,6 +12,7 @@ public interface InventoryService {
     InventoryResponse restock(Long productId, int quantity, String location);
     InventoryResponse reserveStock(Long productId, int quantity);
     InventoryResponse releaseReservedStock(Long productId, int quantity);
+    InventoryResponse confirmReservedStock(Long productId, int quantity);
     InventoryResponse updateReorderLevel(Long productId, int reorderLevel, Integer maxStockLevel);
     InventoryResponse updateLocation(Long productId, String location);
     InventoryResponse recordStockCount(Long productId, int countedQuantity);

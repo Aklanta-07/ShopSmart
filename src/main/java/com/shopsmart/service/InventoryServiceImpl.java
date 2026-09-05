@@ -131,6 +131,27 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    public InventoryResponse confirmReservedStock(Long productId, int quantity) {
+        if (quantity <= 0) {
+            throw new InvalidStockOperationException("Confirm quantity must be positive");
+        }
+        Inventory inventory = inventoryRepository.findByProductId(productId)
+                .orElseThrow(() -> new InventoryNotFoundException(productId));
+
+        if (inventory.getQuantityReserved() < quantity) {
+            throw new InvalidStockOperationException("Cannot confirm more than reserved quantity");
+        }
+        if (inventory.getQuantityOnHand() < quantity) {
+            throw new InvalidStockOperationException("Insufficient on-hand stock to confirm");
+        }
+        // Release reservation AND reduce on-hand stock (items are sold/shipped)
+        inventory.setQuantityReserved(inventory.getQuantityReserved() - quantity);
+        inventory.setQuantityOnHand(inventory.getQuantityOnHand() - quantity);
+        inventory.recalculateAvailable();
+        return toResponse(inventoryRepository.save(inventory));
+    }
+
+    @Override
     public InventoryResponse updateReorderLevel(Long productId, int reorderLevel, Integer maxStockLevel) {
         if (reorderLevel < 0) {
             throw new InvalidStockOperationException("Reorder level cannot be negative");
