@@ -2,130 +2,101 @@ package com.shopsmart.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.shopsmart.security.CustomUserDetailsService;
-import com.shopsmart.security.JwtAuthFilter;
-
-import lombok.RequiredArgsConstructor;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
-@RequiredArgsConstructor
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-	
-	private final JwtAuthFilter jwtAuthFilter;
-	private final CustomUserDetailsService userDetailsService;
-	
-	@Bean
-	public SecurityFilterChain securityFilterChain(
-			                                                        HttpSecurity http) throws Exception {
-		 	
-		// disable csrf? because we are using JWT token for authentication and not using cookies, 
-		//so we don't need csrf protection.
-		http.csrf(csrf -> csrf.disable())
-		.authorizeHttpRequests(auth -> auth // define which endpoints are public and which are protected
-				.requestMatchers("/api/auth/**",
-				        "/swagger-ui/**",
-				        "/swagger-ui.html",
-				        "/swagger-ui/index.html",
-				        "/v3/api-docs/**",
-				        "/v3/api-docs",
-				        "/swagger-resources/**",
-				        "/webjars/**",
-				        "/*.html",          
-				        "/favicon.ico"
-						).permitAll()
-				.anyRequest().authenticated())
-		
-		.exceptionHandling(ex -> ex
-	            .authenticationEntryPoint(
-	                authenticationEntryPoint())
-	            .accessDeniedHandler(
-	                accessDeniedHandler())
-	        )
-		
-		.sessionManagement(session -> session
-				.sessionCreationPolicy(
-						SessionCreationPolicy.STATELESS))
-		
-		.authenticationProvider(authenticationProvider())
-		.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-		
-		return http.build();
-	}
-	
-	@Bean
-	public AuthenticationProvider authenticationProvider() {
-		DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-		provider.setPasswordEncoder(passwordEncoder());
-		return provider;
-	}
-	
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
-	
-	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-		return config.getAuthenticationManager();
-	}
-	
-	@Bean
-	public AuthenticationEntryPoint authenticationEntryPoint() {
-	    return (request, response, authException) -> {
-	        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-	        response.setContentType("application/json");
-	        response.getWriter().write(
-	            new ObjectMapper().writeValueAsString(
-	                java.util.Map.of(
-	                    "status", 401,
-	                    "error", "Unauthorized",
-	                    "message", "Access denied - please login first",
-	                    "path", request.getRequestURI(),
-	                    "timestamp", java.time.LocalDateTime
-	                                    .now().toString()
-	                )
-	            )
-	        );
-	    };
-	}
-	
-	@Bean
-	public AccessDeniedHandler accessDeniedHandler() {
-	    return (request, response, accessDeniedException) -> {
-	        response.setStatus(HttpStatus.FORBIDDEN.value());
-	        response.setContentType("application/json");
-	        response.getWriter().write(
-	            new ObjectMapper().writeValueAsString(
-	                java.util.Map.of(
-	                    "status", 403,
-	                    "error", "Forbidden",
-	                    "message", "You don't have permission to access this resource",
-	                    "path", request.getRequestURI(),
-	                    "timestamp", java.time.LocalDateTime
-	                                    .now().toString()
-	                )
-	            )
-	        );
-	    };
-	}
 
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            // Disable CSRF (stateless API with JWT)
+            .csrf(csrf -> csrf.disable())
+
+            // Stateless session management
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+
+            // Authorization rules
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/public/**", "/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                .anyRequest().authenticated()
+            )
+
+            // OAuth2 Resource Server with JWT
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt
+                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                )
+            );
+
+        return http.build();
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(this::extractAuthorities);
+        return converter;
+    }
+
+    /**
+     * Maps Keycloak JWT claims to Spring Security Authorities.
+     *
+     * Keycloak token structure:
+     * - realm_access.roles = ["ADMIN", "STAFF"]  -> ROLE_ADMIN, ROLE_STAFF
+     * - resource_access.shopsmart-backend.roles = ["orders:write"] -> SCOPE_orders:write
+     */
+    private Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
+        List<GrantedAuthority> authorities = new ArrayList<>();
+
+        // 1. Realm Roles (coarse-grained: ADMIN, STAFF, CUSTOMER)
+        Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+        if (realmAccess != null) {
+            @SuppressWarnings("unchecked")
+            List<String> roles = (List<String>) realmAccess.get("roles");
+            if (roles != null) {
+                roles.stream()
+                    .map(role -> "ROLE_" + role.toUpperCase())
+                    .map(SimpleGrantedAuthority::new)
+                    .forEach(authorities::add);
+            }
+        }
+
+        // 2. Client Roles / Scopes (fine-grained: orders:read, orders:write, etc.)
+        Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
+        if (resourceAccess != null) {
+            Map<String, Object> clientAccess = (Map<String, Object>)
+                resourceAccess.get("shopsmart-backend");
+            if (clientAccess != null) {
+                @SuppressWarnings("unchecked")
+                List<String> roles = (List<String>) clientAccess.get("roles");
+                if (roles != null) {
+                    roles.stream()
+                        .map(role -> "SCOPE_" + role)  // Spring convention: SCOPE_ prefix
+                        .map(SimpleGrantedAuthority::new)
+                        .forEach(authorities::add);
+                }
+            }
+        }
+
+        return authorities;
+    }
 }

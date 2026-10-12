@@ -1,7 +1,6 @@
 package com.shopsmart.dto.response;
 
 import com.shopsmart.entity.OrderStatus;
-import com.shopsmart.entity.PaymentMethod;
 import lombok.*;
 
 import java.math.BigDecimal;

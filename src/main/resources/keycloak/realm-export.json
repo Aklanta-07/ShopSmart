@@ -1,0 +1,113 @@
+{
+  "realm": "shopsmart",
+  "enabled": true,
+  "displayName": "ShopSmart Inventory & Billing",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "rememberMe": true,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "clients": [
+    {
+      "clientId": "shopsmart-backend",
+      "name": "ShopSmart Backend API",
+      "description": "Resource Server - validates JWTs",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "backend-secret-change-in-prod",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "defaultClientScopes": [
+        "orders:read", "orders:write", "inventory:read",
+        "inventory:write", "customers:read", "customers:write", "reports:read"
+      ],
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "shopsmart-frontend",
+      "name": "ShopSmart Frontend (React SPA)",
+      "description": "Public client - Authorization Code + PKCE",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "publicClient": true,
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "access.token.lifespan": "300"
+      },
+      "defaultClientScopes": ["openid", "profile", "email", "orders:read", "orders:write"]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {"name": "ADMIN", "description": "Full system access"},
+      {"name": "STAFF", "description": "Operational access - orders, inventory, customers"},
+      {"name": "CUSTOMER", "description": "Self-service access (future)"}
+    ],
+    "client": {
+      "shopsmart-backend": [
+        {"name": "orders:read", "description": "View orders, search, summary"},
+        {"name": "orders:write", "description": "Create, confirm, process, complete, cancel orders"},
+        {"name": "inventory:read", "description": "View products, stock levels"},
+        {"name": "inventory:write", "description": "Adjust stock, manage products"},
+        {"name": "customers:read", "description": "View customers, addresses"},
+        {"name": "customers:write", "description": "Create/update customers, groups"},
+        {"name": "reports:read", "description": "Revenue, summary, analytics"}
+      ]
+    }
+  },
+  "clientScopes": [
+    {"name": "orders:read", "protocol": "openid-connect", "attributes": {"include.in.token.scope": "true"}},
+    {"name": "orders:write", "protocol": "openid-connect", "attributes": {"include.in.token.scope": "true"}},
+    {"name": "inventory:read", "protocol": "openid-connect", "attributes": {"include.in.token.scope": "true"}},
+    {"name": "inventory:write", "protocol": "openid-connect", "attributes": {"include.in.token.scope": "true"}},
+    {"name": "customers:read", "protocol": "openid-connect", "attributes": {"include.in.token.scope": "true"}},
+    {"name": "customers:write", "protocol": "openid-connect", "attributes": {"include.in.token.scope": "true"}},
+    {"name": "reports:read", "protocol": "openid-connect", "attributes": {"include.in.token.scope": "true"}}
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@shopsmart.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{"type": "password", "value": "admin123", "temporary": false}],
+      "realmRoles": ["ADMIN"]
+    },
+    {
+      "username": "staff",
+      "email": "staff@shopsmart.com",
+      "firstName": "Staff",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{"type": "password", "value": "staff123", "temporary": false}],
+      "realmRoles": ["STAFF"]
+    }
+  ]
+}
